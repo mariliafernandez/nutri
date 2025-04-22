@@ -1,57 +1,84 @@
 from src.VectorDB import VectorDB
-
-
-class TacoItem:
-
-    def __init__(
-        self,
-        description: str,
-        category: str,
-        energy_kcal: float,
-        protein_g: float,
-        lipid_g: float,
-        carbohydrate_g: float,
-        grams:int = 100
-    ):
-        self.description = description
-        self.category = category
-        self.energy_kcal = energy_kcal
-        self.protein_g = protein_g
-        self.lipid_g = lipid_g
-        self.carbohydrate_g = carbohydrate_g
-        self.grams = grams
-
-    def __str__(self):
-        return f"{self.description}, {self.grams}g [{self.category}]:\ncarboidratos: {round(self.carbohydrate_g, 2)} g\nproteínas: {round(self.protein_g, 2)}g\ngorduras: {round(self.lipid_g, 2)} g\ncalorias:{round(self.energy_kcal, 2)}kcal"
-
-    def fraction(self, grams: float):
-        return TacoItem(
-            self.description,
-            self.category,
-            self.energy_kcal * grams / 100,
-            self.protein_g * grams / 100,
-            self.lipid_g * grams / 100,
-            self.carbohydrate_g * grams / 100,
-            grams
-        )
+from typing import Literal
 
 
 class TacoCollection:
 
-    def __init__(self, collection_name: str = "taco"):
+    def __init__(self):
         self.db = VectorDB()
-        self.collection_name = collection_name
+        self.collection_name = "taco"
 
-    def get_or_create(self, json_file):
-        return self.db.create_collection(self.collection_name, json_file)
+    def get_or_create(self, json_file="data/taco/taco.json"):
+        self.collection = self.db.create_collection(self.collection_name, json_file)
+        return self.collection
 
-    def search(self, query: str, n_results: int):
-        results = self.db.search(self.collection_name, query, n_results)
-        self.taco_items = [
-            TacoItem(**{"description": doc} | meta)
-            for doc, meta in zip(results["documents"][0], results["metadatas"][0])
+    def get_item(self, query):
+        result = self.db.search(
+            collection_name=self.collection_name, query=query, where=None, n_results=1
+        )
+        return FoodItem(
+            **{"description": result["documents"][0]} | result["metadatas"][0]
+        )
+
+    def get_categories(self) -> list:
+        metadatas = self.db.get(self.collection_name, include=["metadatas"])[
+            "metadatas"
         ]
-        return self.taco_items
+        categories = [item["category"] for item in metadatas]
+        categories_list = list(set(categories))
+        return categories_list
 
-    def __str__(self):
-        return [str(item) for item in self.taco_items]
+    def serialize(self, documents, metadatas):
+        return [
+            {"description": doc} | meta
+            for doc, meta in zip(documents, metadatas)
+        ]
+
+    def get(
+        self,
+        where_conditions: list[dict] = [],
+        order_by: (
+            Literal[
+                "id", "energy_kcal", "protein_g", "lipid_g", "carbohydrate_g", "fiber_g"
+            ]
+            | None
+        ) = None,
+        reverse: bool = False,
+    ):
+        results = self.db.get(self.collection_name, where_conditions=where_conditions)
+        return self.serialize(results['documents'], results['metadatas'])
+
+    def search(
+        self,
+        query: str = "",
+        where_conditions: list[dict] = [],
+        order_by: (
+            Literal[
+                "id", "energy_kcal", "protein_g", "lipid_g", "carbohydrate_g", "fiber_g"
+            ]
+            | None
+        ) = None,
+        reverse: bool = False,
+        n_results: int | None = None,
+    ) -> list[FoodItem]:
+
+        results = self.db.search(
+            self.collection_name,
+            query=query,
+            where_conditions=where_conditions,
+            n_results=n_results,
+        )
+
+        results = self.serialize(results['documents'][0], results['metadatas'][0])
+
+        if order_by is not None:
+            print("order by:", order_by)
+            results = sorted(
+                results,
+                key=lambda x: x[order_by],
+                reverse=reverse,
+            )
+
+        # results_serialized = [TacoItem(**item) for item in results]
+
+        return results

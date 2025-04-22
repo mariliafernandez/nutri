@@ -8,6 +8,15 @@ pandas = "*"
 openpyxl = "*"
 chromadb = "*"
 pydantic = "*"
+xlrd = "*"
+fastapi = {extras = ["standard"], version = "*"}
+jsonschema = "*"
+fuzzywuzzy = "*"
+python-levenshtein = "*"
+setuptools = "*"
+wheel = "*"
+spacy = "*"
+mysql-connector-python = "*"
 
 [dev-packages]
 ipykernel = "*"
