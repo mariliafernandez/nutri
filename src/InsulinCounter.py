@@ -1,7 +1,20 @@
+from typing import Literal
+
 class InsulinCounter:
     def __init__(self, meal, factor_insulin_cho):
         self.meal = meal
         self.factor_insulin_cho = factor_insulin_cho
+
+    def count(self, mode:Literal["carbo", "fat_protein_increment", "fpu"] = "carbo"):
+        """Calculate the insulin needed for the meal considering the mode"""
+        if mode == "carbo":
+            return self.count_carbo()
+        elif mode == "fat_protein_increment":
+            return self.fat_protein_increment()
+        elif mode == "fpu":
+            return self.fpu()
+        else:
+            raise ValueError("Invalid mode. Choose 'carbo', 'fat_protein_increment', or 'fpu'.")
 
     def count_carbo(self):
         """Calculate the insulin needed for the meal considering only carbohydrates"""

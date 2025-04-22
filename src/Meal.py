@@ -1,18 +1,18 @@
-from src.Taco import FoodItem
+from src.FoodItem import FoodItem
 from typing import Literal
 
 
 class Meal:
     def __init__(
         self,
-        type=Literal[
+        type: Literal[
             "café da manhã",
             "lanche da manhã",
             "almoço",
             "lanche da tarde",
             "jantar",
             "ceia",
-        ],
+        ] = None,
     ):
         self.items = []
         self.portions = []
@@ -29,7 +29,9 @@ class Meal:
         string += f"\n-----\ncarboidratos: {round(self.carbohydrate_g, 2)}\nproteínas: {round(self.protein_g, 2)}\ngorduras: {round(self.lipid_g, 2)}\ncalorias: {round(self.energy_kcal, 2)}\n-----"
         return string
 
-    def add_item(self, item: FoodItem, portion: float):
+    def add_item(self, item: FoodItem, portion: float = None, grams: float = None):
+        if portion is None and grams is not None:
+            portion = item.grams / grams
         self.items.append(item)
         self.portions.append(portion)
         self.carbohydrate_g += item.carbohydrate_g * portion
@@ -37,7 +39,7 @@ class Meal:
         self.lipid_g += item.lipid_g * portion
         self.energy_kcal += item.energy_kcal * portion
 
-    def remove_item(self, index:int):
+    def remove_item(self, index: int):
         item = self.items[index]
         portion = self.portions[index]
         self.carbohydrate_g -= item.carbohydrate_g * portion
@@ -46,7 +48,4 @@ class Meal:
         self.energy_kcal -= item.energy_kcal * portion
         del self.items[index]
         del self.portions[index]
-
-    # def calculate_insulin(self, factor_insulin_cho:int, factor_sensibility):
-
 
