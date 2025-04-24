@@ -104,3 +104,10 @@ def calculate_insulin(input_item: CalculateInsulinInput):
         "insulin_needed": insulin_counter.count(input_item.mode),
         "mode": input_item.mode,
     }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    port = int(os.environ.get("PORT", 8000)) 
+    uvicorn.run("app:app", host="0.0.0.0", port=port)
