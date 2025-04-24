@@ -1,3 +1,4 @@
+Pipfile
 *.lock
 chroma_data/
 

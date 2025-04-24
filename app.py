@@ -6,10 +6,21 @@ from src.Meal import Meal
 from src.Database import Database
 from src.FoodItem import FoodItem
 from src.InsulinCounter import InsulinCounter
+from dotenv import load_dotenv
 
+import os
+
+
+load_dotenv()
 app = FastAPI()
 db = Database("nutrition")
-db.connect()
+db.connect(
+    host=os.getenv("DB_HOST"),
+    port=int(os.getenv("DB_PORT")),
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASSWORD"),
+)
+
 
 class SearchItem(BaseModel):
     name: str | None = None
@@ -32,6 +43,11 @@ class CalculateInsulinInput(BaseModel):
     meal: MealInput
     factor_insulin_cho: int
     mode: Literal["carbo", "fpi", "fpu"] = "carbo"
+
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
 
 
 @app.post("/search")
@@ -88,4 +104,3 @@ def calculate_insulin(input_item: CalculateInsulinInput):
         "insulin_needed": insulin_counter.count(input_item.mode),
         "mode": input_item.mode,
     }
-

@@ -10,10 +10,10 @@ class Database:
 
     def connect(
         self,
-        host: str = "127.0.0.1",
-        port: int = 3306,
-        user: str = "root",
-        password: str = "admin",
+        host: str,
+        port: int,
+        user: str,
+        password: str,
     ):
         # Simulate a database connection
         self.connection = mysql.connector.connect(
