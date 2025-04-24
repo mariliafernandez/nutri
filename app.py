@@ -15,7 +15,6 @@ load_dotenv()
 app = FastAPI()
 
 
-
 class SearchItem(BaseModel):
     name: str | None = None
     order_by: str | None = None
@@ -46,14 +45,6 @@ def read_root():
 
 @app.post("/search")
 def search(item: SearchItem):
-
-    db = Database("nutrition")
-    db.connect(
-        host=os.getenv("DB_HOST"),
-        port=int(os.getenv("DB_PORT")),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-    )
     result = db.select(
         table_name="integrate_tables",
         description_like=item.name,
@@ -68,14 +59,6 @@ def search(item: SearchItem):
 @app.post("/calculate_macros")
 def calculate_macros(meal_input: MealInput):
     meal = Meal()
-
-    db = Database("nutrition")
-    db.connect(
-        host=os.getenv("DB_HOST"),
-        port=int(os.getenv("DB_PORT")),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-    )
 
     for item in meal_input.items:
         records = db.select(
@@ -94,14 +77,6 @@ def calculate_macros(meal_input: MealInput):
 @app.post("/calculate_insulin")
 def calculate_insulin(input_item: CalculateInsulinInput):
     meal = Meal()
-
-    db = Database("nutrition")
-    db.connect(
-        host=os.getenv("DB_HOST"),
-        port=int(os.getenv("DB_PORT")),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-    )
 
     for item in input_item.meal.items:
         records = db.select(
@@ -127,5 +102,14 @@ def calculate_insulin(input_item: CalculateInsulinInput):
 if __name__ == "__main__":
     import uvicorn
     import os
-    port = int(os.environ.get("PORT", 8000)) 
+
+    port = int(os.environ.get("PORT", 8000))
     uvicorn.run("app:app", host="0.0.0.0", port=port)
+
+    db = Database(os.getenv("DB_NAME"))
+    db.connect(
+        host=os.getenv("DB_HOST"),
+        port=int(os.getenv("DB_PORT")),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+    )
