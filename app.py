@@ -45,6 +45,15 @@ def read_root():
 
 @app.post("/search")
 def search(item: SearchItem):
+
+    db = Database(os.getenv("DB_NAME"))
+    db.connect(
+        host=os.getenv("DB_HOST"),
+        port=int(os.getenv("DB_PORT")),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+    )
+    
     result = db.select(
         table_name="integrate_tables",
         description_like=item.name,
@@ -58,6 +67,15 @@ def search(item: SearchItem):
 
 @app.post("/calculate_macros")
 def calculate_macros(meal_input: MealInput):
+
+    db = Database(os.getenv("DB_NAME"))
+    db.connect(
+        host=os.getenv("DB_HOST"),
+        port=int(os.getenv("DB_PORT")),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+    )
+
     meal = Meal()
 
     for item in meal_input.items:
@@ -76,6 +94,15 @@ def calculate_macros(meal_input: MealInput):
 
 @app.post("/calculate_insulin")
 def calculate_insulin(input_item: CalculateInsulinInput):
+
+    db = Database(os.getenv("DB_NAME"))
+    db.connect(
+        host=os.getenv("DB_HOST"),
+        port=int(os.getenv("DB_PORT")),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+    )
+
     meal = Meal()
 
     for item in input_item.meal.items:
@@ -106,10 +133,4 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("app:app", host="0.0.0.0", port=port)
 
-    db = Database(os.getenv("DB_NAME"))
-    db.connect(
-        host=os.getenv("DB_HOST"),
-        port=int(os.getenv("DB_PORT")),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-    )
+    
