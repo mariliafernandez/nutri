@@ -12,6 +12,7 @@ class FoodItem:
         lipid_g: float,
         carbohydrate_g: float,
         fiber_g: float,
+        source: str,
         grams: int = 100,
     ):
         self.id = id
@@ -23,6 +24,7 @@ class FoodItem:
         self.carbohydrate_g = carbohydrate_g
         self.fiber_g = fiber_g
         self.grams = grams
+        self.source = source
 
     def from_dict(cls, data: dict):
         """Create a FoodItem instance from a dictionary."""
@@ -30,6 +32,7 @@ class FoodItem:
             id=data.get("id"),
             description=data.get("description"),
             category=data.get("category"),
+            source=data.get("source"),
             energy_kcal=data.get("energy_kcal", None),
             protein_g=data.get("protein_g", None),
             lipid_g=data.get("lipid_g", None),

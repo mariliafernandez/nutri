@@ -8,14 +8,15 @@ from src.FoodItem import FoodItem
 from src.InsulinCounter import InsulinCounter
 
 app = FastAPI()
-
+db = Database("nutrition")
+db.connect()
 
 class SearchItem(BaseModel):
     name: str | None = None
     order_by: str | None = None
     ascending: bool | None = None
+    max_results: int | None = None
     categories: list[str] = []
-    max_results: int = 5
 
 
 class FoodPortion(BaseModel):
@@ -30,28 +31,24 @@ class MealInput(BaseModel):
 class CalculateInsulinInput(BaseModel):
     meal: MealInput
     factor_insulin_cho: int
-    mode: Literal["carbo", "fat_protein_increment", "fpu"] = "carbo"
+    mode: Literal["carbo", "fpi", "fpu"] = "carbo"
 
 
 @app.post("/search")
 def search(item: SearchItem):
-    db = Database("nutrition")
-    db.connect()
-
     result = db.select(
         table_name="integrate_tables",
         description_like=item.name,
+        categories=item.categories,
         order_by=item.order_by,
         order="ASC" if item.ascending else "DESC",
+        limit=item.max_results,
     )
     return result
 
 
 @app.post("/calculate_macros")
 def calculate_macros(meal_input: MealInput):
-    db = Database("nutrition")
-    db.connect()
-
     meal = Meal()
 
     for item in meal_input.items:
@@ -70,9 +67,6 @@ def calculate_macros(meal_input: MealInput):
 
 @app.post("/calculate_insulin")
 def calculate_insulin(input_item: CalculateInsulinInput):
-    db = Database("nutrition")
-    db.connect()
-
     meal = Meal()
 
     for item in input_item.meal.items:
@@ -94,3 +88,4 @@ def calculate_insulin(input_item: CalculateInsulinInput):
         "insulin_needed": insulin_counter.count(input_item.mode),
         "mode": input_item.mode,
     }
+

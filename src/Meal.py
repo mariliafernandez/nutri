@@ -1,4 +1,5 @@
 from src.FoodItem import FoodItem
+
 from typing import Literal
 
 
@@ -22,6 +23,7 @@ class Meal:
         self.energy_kcal = 0
         self.type = type
 
+
     def __repr__(self):
         string = f"Refeição: {self.type}\n-----"
         for i in range(len(self.items)):
@@ -31,7 +33,7 @@ class Meal:
 
     def add_item(self, item: FoodItem, portion: float = None, grams: float = None):
         if portion is None and grams is not None:
-            portion = item.grams / grams
+            portion = grams / item.grams
         self.items.append(item)
         self.portions.append(portion)
         self.carbohydrate_g += item.carbohydrate_g * portion

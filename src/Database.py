@@ -1,5 +1,6 @@
 import mysql.connector
 from typing import Literal
+from src.QueryFactory import QueryFactory
 
 
 class Database:
@@ -57,16 +58,20 @@ class Database:
         self,
         table_name,
         columns="*",
-        description_like: str = "",
+        description_like: str = None,
+        categories: list = [],
         id: int = None,
         order_by: str = "",
         order: Literal["ASC", "DESC"] = "ASC",
+        limit: int = None,
     ):
         conditions = []
-        if description_like != "":
+        if description_like is not None:
             conditions.append({"description": description_like})
         if id is not None:
             conditions.append({"id": id})
+        if categories != []:
+            conditions.append({"category": categories})
 
         query_factory = QueryFactory(
             table_name=table_name,
@@ -74,6 +79,7 @@ class Database:
             where_conditions=conditions,
             order_by=order_by,
             order=order,
+            limit=limit,
         )
         query_factory.make_select()
 
@@ -82,51 +88,3 @@ class Database:
             cursor.execute(query_factory.query)
             result = cursor.fetchall()
             return result
-
-
-class QueryFactory:
-    def __init__(
-        self,
-        table_name,
-        columns: str = "*",
-        where_conditions: list = [dict],
-        order_by: str = "",
-        order: Literal["ASC", "DESC"] = "ASC",
-    ):
-
-        self.table_name = table_name
-        self.columns = columns
-        self.order_by = order_by
-        self.order = order
-        self.where_conditions = where_conditions
-        self.query = ""
-
-    def make_select(self):
-        self.select()
-        self.add_where_clause()
-        self.add_order_by()
-
-    def select(self):
-        self.query = f"SELECT {self.columns} FROM {self.table_name}"
-        return self.query
-
-    def add_where_clause(self):
-        where_clauses = []
-        for condition in self.where_conditions:
-            column, value = list(condition.items())[0]
-            if isinstance(value, str):
-                where_clauses.append(f"{column} LIKE '%{value}%'")
-            else:
-                where_clauses.append(f"{column} = {value}")
-        self.query += " WHERE " + " AND ".join(where_clauses)
-
-    def add_order_by(self):
-        if self.order_by != "":
-            self.query += f" ORDER BY {self.order_by} {self.order}"
-
-    def insert(self, data: dict):
-        columns = ", ".join(data.keys())
-        values = ", ".join(["%s"] * len(data))
-        return f"INSERT INTO {self.table_name} ({columns}) VALUES ({values})", tuple(
-            data.values()
-        )
