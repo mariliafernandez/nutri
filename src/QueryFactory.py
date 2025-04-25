@@ -7,7 +7,7 @@ class QueryFactory:
         table_name,
         columns: str = "*",
         where_conditions: list[dict] = [],
-        order_by: str = "",
+        order_by: str = None,
         order: Literal["ASC", "DESC"] = "ASC",
         limit: int = None,
     ):
@@ -53,7 +53,7 @@ class QueryFactory:
             return f"{column} = {value}"
 
     def add_order_by(self, order_by: str, order: Literal["ASC", "DESC"] = "ASC"):
-        if order_by != "":
+        if order_by is not None:
             self.query += f" ORDER BY {order_by} {order}"
 
     def add_limit(self, limit: int):

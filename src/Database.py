@@ -61,7 +61,7 @@ class Database:
         description_like: str = None,
         categories: list = [],
         id: int = None,
-        order_by: str = "",
+        order_by: str = None,
         order: Literal["ASC", "DESC"] = "ASC",
         limit: int = None,
     ):
