@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Literal
 
@@ -38,6 +38,23 @@ class CalculateInsulinInput(BaseModel):
     mode: Literal["carbo", "fpi", "fpu"] = "carbo"
 
 
+class FoodItemResponse(BaseModel):
+    id: int
+    description: str
+    category: str
+    energy_kcal: float | None
+    protein_g: float | None
+    lipid_g: float | None
+    carbohydrate_g: float | None
+    fiber_g: float | None
+    source: Literal["taco", "ibge"]
+    grams: int = 100
+
+
+class CollectionResponse(BaseModel):
+    nutritional_info: list[FoodItemResponse]
+
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
@@ -53,7 +70,7 @@ def search(item: SearchItem):
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
     )
-    
+
     result = db.select(
         table_name="integrate_tables",
         description_like=item.name,
@@ -62,7 +79,8 @@ def search(item: SearchItem):
         order="ASC" if item.ascending else "DESC",
         limit=item.max_results,
     )
-    return result
+    
+    return CollectionResponse(items=result)
 
 
 @app.post("/calculate_macros")
@@ -79,15 +97,15 @@ def calculate_macros(meal_input: MealInput):
     meal = Meal()
 
     for item in meal_input.items:
-        records = db.select(
+        record = db.select(
             table_name="integrate_tables",
             id=item.food_id,
         )
-        if records:
-            food_item = FoodItem.from_dict(FoodItem, data=records[0])
+        if record:
+            food_item = FoodItem.from_dict(FoodItem, data=record[0])
             meal.add_item(item=food_item, grams=item.grams)
-
-        # TODO: Add error handling for food items not found in the database
+        else:
+            raise HTTPException(status_code=404, detail=f"Food item with ID {item.food_id} not found.")
 
     return meal
 
@@ -106,21 +124,22 @@ def calculate_insulin(input_item: CalculateInsulinInput):
     meal = Meal()
 
     for item in input_item.meal.items:
-        records = db.select(
+        record = db.select(
             table_name="integrate_tables",
             id=item.food_id,
         )
-        if records:
-            food_item = FoodItem.from_dict(FoodItem, data=records[0])
+        if record:
+            food_item = FoodItem.from_dict(FoodItem, data=record[0])
             meal.add_item(item=food_item, grams=item.grams)
-
-        # TODO: Add error handling for food items not found in the database
+        else:
+            raise HTTPException(status_code=404, detail=f"Food item with ID {item.food_id} not found.")
 
     insulin_counter = InsulinCounter(meal, input_item.factor_insulin_cho)
     insulin_counter.count(input_item.mode)
 
     return {
-        "meal": meal,
+        "items": meal.items,
+        "portions": meal.portions,
         "insulin_needed": insulin_counter.count(input_item.mode),
         "mode": input_item.mode,
     }
@@ -132,5 +151,3 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("app:app", host="0.0.0.0", port=port)
-
-    
