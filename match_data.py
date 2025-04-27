@@ -115,6 +115,13 @@ for ibge_id in ibge_ids_no_match:
     # teste.append(merged_record)
     merged_data.append(merged_record)
 
+with open('data/categories_mapping.json', 'r', encoding='utf-8') as f:
+    categories_mapping = json.load(f)
+
+for item in merged_data:
+    category = item['category'].strip()
+    item['category'] = categories_mapping.get(category, item['category'])
+
 
 with open("data/integrated_data.json", "w", encoding="utf-8") as f:
     json.dump(merged_data, f, ensure_ascii=False, indent=4)

@@ -10,6 +10,7 @@ class QueryFactory:
         order_by: str = None,
         order: Literal["ASC", "DESC"] = "ASC",
         limit: int = None,
+        distinct: bool = False,
     ):
 
         self.table_name = table_name
@@ -17,8 +18,9 @@ class QueryFactory:
         self.order_by = order_by
         self.order = order
         self.where_conditions = where_conditions
-        self.limit=limit
+        self.limit = limit
         self.query = ""
+        self.distinct = distinct
 
     def make_select(self):
         self.start_select_query(columns=self.columns, table_name=self.table_name)
@@ -30,6 +32,8 @@ class QueryFactory:
         self.add_limit(self.limit)
 
     def start_select_query(self, columns: str = "*", table_name: str = ""):
+        if self.distinct:
+            columns = f"DISTINCT {columns}"
         self.query = f"SELECT {columns} FROM {table_name}"
         return self.query
 
@@ -52,7 +56,7 @@ class QueryFactory:
         else:
             return f"{column} = {value}"
 
-    def add_order_by(self, order_by: str, order: Literal["ASC", "DESC"] = "ASC"):
+    def add_order_by(self, order_by: str = None, order: Literal["ASC", "DESC"] = "ASC"):
         if order_by is not None:
             self.query += f" ORDER BY {order_by} {order}"
 

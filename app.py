@@ -28,15 +28,14 @@ class FoodPortion(BaseModel):
     grams: int
 
 
-class MealInput(BaseModel):
-    items: list[FoodPortion] = []
-
-
 class CalculateInsulinInput(BaseModel):
-    meal: MealInput
+    meal: list[FoodPortion]
     factor_insulin_cho: int
     mode: Literal["carbo", "fpi", "fpu"] = "carbo"
 
+
+class MealInput(BaseModel):
+    meal: list[FoodPortion]
 
 class FoodItemResponse(BaseModel):
     id: int
@@ -52,12 +51,31 @@ class FoodItemResponse(BaseModel):
 
 
 class CollectionResponse(BaseModel):
-    nutritional_info: list[FoodItemResponse]
+    items: list[FoodItemResponse]
 
 
 @app.get("/")
-def read_root():
+def hello_world():
     return {"Hello": "World"}
+
+
+@app.get("/categories")
+def get_categories():
+    db = Database(os.getenv("DB_NAME"))
+    db.connect(
+        host=os.getenv("DB_HOST"),
+        port=int(os.getenv("DB_PORT")),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+    )
+
+    categories = db.select(
+        table_name="integrate_tables",
+        columns="category",
+        distinct=True,
+    )
+
+    return {"categories": [cat["category"] for cat in categories]}
 
 
 @app.post("/search")
@@ -79,7 +97,7 @@ def search(item: SearchItem):
         order="ASC" if item.ascending else "DESC",
         limit=item.max_results,
     )
-    
+
     return CollectionResponse(items=result)
 
 
@@ -96,7 +114,7 @@ def calculate_macros(meal_input: MealInput):
 
     meal = Meal()
 
-    for item in meal_input.items:
+    for item in meal_input.meal:
         record = db.select(
             table_name="integrate_tables",
             id=item.food_id,
@@ -105,7 +123,9 @@ def calculate_macros(meal_input: MealInput):
             food_item = FoodItem.from_dict(FoodItem, data=record[0])
             meal.add_item(item=food_item, grams=item.grams)
         else:
-            raise HTTPException(status_code=404, detail=f"Food item with ID {item.food_id} not found.")
+            raise HTTPException(
+                status_code=404, detail=f"Food item with ID {item.food_id} not found."
+            )
 
     return meal
 
@@ -123,7 +143,7 @@ def calculate_insulin(input_item: CalculateInsulinInput):
 
     meal = Meal()
 
-    for item in input_item.meal.items:
+    for item in input_item.meal:
         record = db.select(
             table_name="integrate_tables",
             id=item.food_id,
@@ -132,7 +152,9 @@ def calculate_insulin(input_item: CalculateInsulinInput):
             food_item = FoodItem.from_dict(FoodItem, data=record[0])
             meal.add_item(item=food_item, grams=item.grams)
         else:
-            raise HTTPException(status_code=404, detail=f"Food item with ID {item.food_id} not found.")
+            raise HTTPException(
+                status_code=404, detail=f"Food item with ID {item.food_id} not found."
+            )
 
     insulin_counter = InsulinCounter(meal, input_item.factor_insulin_cho)
     insulin_counter.count(input_item.mode)

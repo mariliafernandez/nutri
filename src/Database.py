@@ -19,7 +19,8 @@ class Database:
         self.connection = mysql.connector.connect(
             database=self.db_name, host=host, port=port, user=user, password=password
         )
-
+        print(f"Connected to database {self.db_name} at {host}:{port}")
+        
     def disconnect(self):
         # Simulate closing the database connection
         self.connection.close()
@@ -64,6 +65,7 @@ class Database:
         order_by: str = None,
         order: Literal["ASC", "DESC"] = "ASC",
         limit: int = None,
+        distinct: bool = False,
     ):
         conditions = []
         if description_like is not None:
@@ -80,6 +82,7 @@ class Database:
             order_by=order_by,
             order=order,
             limit=limit,
+            distinct=distinct,
         )
         query_factory.make_select()
 

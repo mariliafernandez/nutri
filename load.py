@@ -1,6 +1,7 @@
 from src.Database import Database
 import json
-
+import os
+from dotenv import load_dotenv
 
 def load_taco():
     with open('data/taco/taco.json', 'r', encoding='utf-8') as file:
@@ -41,9 +42,24 @@ def load_integrated():
 
 
 if __name__ =='__main__':
+    load_dotenv()
 
-    db = Database("nutrition")
-    db.connect()
+    if os.getenv("ENV") == "PROD":
+        db = Database(os.getenv("DB_NAME_PROD"))
+        db.connect(
+            host=os.getenv("DB_HOST_PROD"),
+            port=int(os.getenv("DB_PORT_PROD")),
+            user=os.getenv("DB_USER_PROD"),
+            password=os.getenv("DB_PASSWORD_PROD"),
+        )
+    else:
+        db = Database(os.getenv("DB_NAME"))
+        db.connect(
+            host=os.getenv("DB_HOST"),
+            port=int(os.getenv("DB_PORT")),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+        )
 
     load_integrated()
 
