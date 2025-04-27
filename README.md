@@ -33,9 +33,9 @@ curl --request GET --url https://www.nutritionall.xyz/categories
 ```json
 {
   "name": "string | null",  // nome do alimento
-  "order_by": "string | null",  // ordenação dos resultados, opções: "energy_kcal", "protein_g", "carbohydrate_g", "lipid_g", "fiber_g", null
-  "ascending": "boolean",  // tipo de ordenação
-  "max_results": "int",  // limite máximo de resultados
+  "order_by": "string | null",  // ordenar resultados por opções: "energy_kcal", "protein_g", "carbohydrate_g", "lipid_g", "fiber_g", null
+  "ascending": "boolean",  // ordenação ascendente (menor -> maior)
+  "max_results": "int",  // limite máximo de resultados para mostrar
   "categories": "list"  // filtro de categorias
 }
 ```
@@ -70,6 +70,55 @@ curl --request POST \
     "ascending": false,
     "max_results":10,
     "categories":["Panificados"]
+}'
+```
+
+### POST /relation - Relação entre macronutrientes
+**Descrição:** Lista os alimentos com base na relação entre dois macronutrientes, tal que `relação = col1/col2`
+
+**Request Body:**
+```json
+{
+    "col1":"string",  // macronutriente 1, opções: "energy_kcal", "protein_g", "carbohydrate_g", "lipid_g", "fiber_g"
+    "col2":"string",  // macronutriente 2, opções: "energy_kcal", "protein_g", "carbohydrate_g", "lipid_g", "fiber_g"
+    "categories": "list",  // filtro de categorias, default = []
+    "ascending": "boolean",  // ordenação ascendente (menor -> maior), default = false
+    "max_results":"int"  // limite máximo de resultados para mostrar, default = null
+}
+```
+
+**Response Body:**
+```json
+{
+    "items": [
+        {
+            "id": "int",
+            "description": "string",
+            "category": "string",
+            "energy_kcal": "float | null",
+            "protein_g": "float | null",
+            "lipid_g": "float | null",
+            "carbohydrate_g": "float | null",
+            "fiber_g": "float | null",
+            "relation_value": "float",
+            "relation_description": "string",
+            "source": "string",
+            "grams": "int"
+        },
+    ]
+}
+```
+
+**Examplo curl:**
+```json
+curl --request POST \
+  --url https://www.nutritionall.xyz/relation \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"col1":"fiber_g",
+	"col2":"carbohydrate_g",
+	"ascending": true,
+	"max_results":10
 }'
 ```
 

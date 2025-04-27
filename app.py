@@ -23,6 +23,14 @@ class SearchItem(BaseModel):
     categories: list[str] = []
 
 
+class RelationItem(BaseModel):
+    col1: str
+    col2: str
+    ascending: bool = False
+    max_results: int | None = None
+    categories: list[str] = []
+
+
 class FoodPortion(BaseModel):
     food_id: int
     grams: int
@@ -37,6 +45,7 @@ class CalculateInsulinInput(BaseModel):
 class MealInput(BaseModel):
     meal: list[FoodPortion]
 
+
 class FoodItemResponse(BaseModel):
     id: int
     description: str
@@ -48,6 +57,25 @@ class FoodItemResponse(BaseModel):
     fiber_g: float | None
     source: Literal["taco", "ibge"]
     grams: int = 100
+
+
+class RelationItemResponse(BaseModel):
+    id: int
+    description: str
+    category: str
+    energy_kcal: float | None
+    protein_g: float | None
+    lipid_g: float | None
+    carbohydrate_g: float | None
+    fiber_g: float | None
+    relation_value: float | None
+    relation_description: str
+    source: Literal["taco", "ibge"]
+    grams: int = 100
+
+
+class RelationResponse(BaseModel):
+    items: list[RelationItemResponse]
 
 
 class CollectionResponse(BaseModel):
@@ -99,6 +127,34 @@ def search(item: SearchItem):
     )
 
     return CollectionResponse(items=result)
+
+
+@app.post("/relation")
+def relation(item: RelationItem):
+
+    db = Database(os.getenv("DB_NAME"))
+    db.connect(
+        host=os.getenv("DB_HOST"),
+        port=int(os.getenv("DB_PORT")),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+    )
+
+    results = db.select_relation(
+        table_name="integrate_tables",
+        select_columns="id, description, category, energy_kcal, protein_g, lipid_g, carbohydrate_g, fiber_g, source",
+        col1=item.col1,
+        col2=item.col2,
+        categories=item.categories,
+        order="ASC" if item.ascending else "DESC",
+        limit=item.max_results,
+    )
+
+    results = [
+        r | {"relation_description": f"{item.col1} / {item.col2}"} for r in results
+    ]
+
+    return RelationResponse(items=results)
 
 
 @app.post("/calculate_macros")

@@ -47,6 +47,8 @@ class QueryFactory:
             self.query += f" WHERE {aggregator.join(conditions)}"
 
     def condition_ditc2str(self, condition: dict):
+        if isinstance(condition, str):
+            return condition
         column, value = list(condition.items())[0]
         if isinstance(value, str):
             return f"{column} LIKE '%{value}%'"

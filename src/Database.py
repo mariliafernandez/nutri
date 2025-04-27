@@ -20,7 +20,7 @@ class Database:
             database=self.db_name, host=host, port=port, user=user, password=password
         )
         print(f"Connected to database {self.db_name} at {host}:{port}")
-        
+
     def disconnect(self):
         # Simulate closing the database connection
         self.connection.close()
@@ -75,7 +75,7 @@ class Database:
         if categories != []:
             conditions.append({"category": categories})
 
-        query_factory = QueryFactory(
+        qf = QueryFactory(
             table_name=table_name,
             columns=columns,
             where_conditions=conditions,
@@ -84,10 +84,48 @@ class Database:
             limit=limit,
             distinct=distinct,
         )
-        query_factory.make_select()
+        qf.make_select()
+        return self.run_query(qf.query)
 
-        with self.connection.cursor(dictionary=True) as cursor:
-            print("Executing query:", query_factory.query)
-            cursor.execute(query_factory.query)
-            result = cursor.fetchall()
-            return result
+    def select_relation(
+        self,
+        table_name: str,
+        select_columns: str,
+        col1: str,
+        col2: str,
+        categories: list = [],
+        order: str = "DESC",
+        limit: int = None,
+    ):
+        """
+        Selects a relation between two columns, avoiding division by zero.
+        """
+
+        select_columns += f", {col1} / NULLIF({col2}, 0) AS relation_value"
+        where_conditions = [f"{col1} IS NOT NULL", f"{col2} IS NOT NULL"]
+        
+        if categories != []:
+            where_conditions.append({"category": categories})
+
+        qf = QueryFactory(
+            table_name=table_name,
+            columns=select_columns,
+            where_conditions=where_conditions,
+            order_by=f"relation_value",
+            order=order,
+            limit=limit,
+            distinct=False,
+        )
+        qf.make_select()
+        return self.run_query(qf.query)
+
+    def run_query(self, query: str):
+        if self.connection:
+            with self.connection.cursor(dictionary=True) as cursor:
+                print("Executing query:", query)
+                cursor.execute(query)
+                result = cursor.fetchall()
+                return result
+        else:
+            print("No connection to the database.")
+            return None
