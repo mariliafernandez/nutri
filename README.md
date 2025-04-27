@@ -8,20 +8,27 @@ API com dados de informação nutricional de diversos alimentos, extraídos das 
 
 
 ## Documentação
-[Swagger](https://open-nutri-api-4ad4cdecb660.herokuapp.com/docs)
-As requisições s
+URL da API: https://www.nutritionall.xyz
+Swagger: https://www.nutritionall.xyz/docs
+
 ### GET /categories - Listar categorias
 **Descrição:** Retorna uma lista de categorias distintas disponíveis na base de dados.
+
 **Response Body:**
 ```json
 {
     "categories": ["string"]
 }
 ```
+**Exemplo curl**
+```bash
+curl --request GET --url https://www.nutritionall.xyz/categories
+```
 
 
 ### POST /search - Buscar alimentos
 **Descrição:** Busca alimentos na base de dados com base nos filtros fornecidos.
+
 **Request Body:**
 ```json
 {
@@ -52,9 +59,23 @@ As requisições s
     ]
 }
 ```
+**Exemplo curl**
+```bash
+curl --request POST \
+  --url https://www.nutritionall.xyz/search \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "name": "pão",
+    "order_by":"carbohydrate_g",
+    "ascending": false,
+    "max_results":10,
+    "categories":["Panificados"]
+}'
+```
 
 ### POST /calculate_macros - Calcular macros
 **Descrição:** Calcula os macronutrientes de uma refeição com base nos alimentos e quantidades fornecidos.
+
 **Request Body:**
 ```json
 {
@@ -92,8 +113,28 @@ As requisições s
 }
 ```
 
+**Exemplo curl**
+```bash
+curl --request POST \
+  --url https://www.nutritionall.xyz/calculate_macros \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"meal": [
+        {
+            "food_id": 6800,
+            "grams": 100
+        },
+        {
+            "food_id":7000,
+            "grams":180
+        }
+    ]
+}'
+```
+
 ### POST /calculate_insulin - Calcular insulina
 **Descrição:** Calcula a quantidade de insulina necessária com base na refeição e no fator de insulina/carboidrato fornecido.
+
 **Request Body:**
 ```json
 {
@@ -129,3 +170,24 @@ As requisições s
 }
 ```
 
+**Exemplo curl**
+```bash
+curl --request POST \
+  --url https://www.nutritionall.xyz/calculate_insulin \
+  --header 'Content-Type: application/json' \
+  --data '{
+        "meal": [
+            {
+                "food_id": 6712,
+                "grams": 100
+            },
+            {
+                "food_id":6715,
+                "grams":180
+            }
+    ],
+    "factor_insulin_cho": 10,
+    "mode":"fpi"
+}'
+```
+<!-- curl --request GET --url https://www.nutritionall.xyz/categories \
