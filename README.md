@@ -9,6 +9,7 @@ API com dados de informação nutricional de diversos alimentos, extraídos das 
 
 ## Documentação
 URL da API: https://www.nutritionall.xyz
+
 Swagger: https://www.nutritionall.xyz/docs
 
 ### GET /categories - Listar categorias
