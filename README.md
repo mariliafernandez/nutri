@@ -9,7 +9,7 @@ API com dados de informação nutricional de diversos alimentos, extraídos das 
 
 ## Documentação
 [Swagger](https://open-nutri-api-4ad4cdecb660.herokuapp.com/docs)
-As requisições s
+
 ### GET /categories - Listar categorias
 **Descrição:** Retorna uma lista de categorias distintas disponíveis na base de dados.
 **Response Body:**
