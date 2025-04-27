@@ -8,8 +8,8 @@ API com dados de informação nutricional de diversos alimentos, extraídos das 
 
 
 ## Documentação
-Documentação da API disponível em: http://nutritionall.xyz/docs
-
+[Swagger](https://open-nutri-api-4ad4cdecb660.herokuapp.com/docs)
+As requisições s
 ### GET /categories - Listar categorias
 **Descrição:** Retorna uma lista de categorias distintas disponíveis na base de dados.
 **Response Body:**
@@ -26,7 +26,7 @@ Documentação da API disponível em: http://nutritionall.xyz/docs
 ```json
 {
   "name": "string | null",  // nome do alimento
-  "order_by": "string | null",  // ordenação dos resultados
+  "order_by": "string | null",  // ordenação dos resultados, opções: "energy_kcal", "protein_g", "carbohydrate_g", "lipid_g", "fiber_g", null
   "ascending": "boolean",  // tipo de ordenação
   "max_results": "int",  // limite máximo de resultados
   "categories": "list"  // filtro de categorias
