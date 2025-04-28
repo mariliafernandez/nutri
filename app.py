@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Literal
 
@@ -38,6 +39,8 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
     docs_url="/api/docs",
 )
+
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"])
 
 
 class SearchItem(BaseModel):
@@ -216,12 +219,12 @@ def calculate(meal_input: MealInput):
         insulin_needed = insulin_counter.count(meal_input.mode)
 
     return CalculateResponse(
-        energy_kcal = meal.energy_kcal,
-        carbohydrate_g = meal.carbohydrate_g,
-        protein_g = meal.protein_g,
-        lipid_g = meal.lipid_g,
-        fiber_g = meal.fiber_g,
-        insulin_needed = insulin_needed
+        energy_kcal=meal.energy_kcal,
+        carbohydrate_g=meal.carbohydrate_g,
+        protein_g=meal.protein_g,
+        lipid_g=meal.lipid_g,
+        fiber_g=meal.fiber_g,
+        insulin_needed=insulin_needed,
     )
 
 
