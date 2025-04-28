@@ -61,14 +61,10 @@ class FoodPortion(BaseModel):
     grams: int
 
 
-class CalculateInsulinInput(BaseModel):
-    meal: list[FoodPortion]
-    factor_insulin_cho: int
-    mode: Literal["carbo", "fpi", "fpu"] = "carbo"
-
-
 class MealInput(BaseModel):
     meal: list[FoodPortion]
+    factor_insulin_cho: int = None
+    mode: Literal["carbo", "fpi", "fpu"] = "carbo"
 
 
 class FoodItemResponse(BaseModel):
@@ -105,6 +101,15 @@ class RelationResponse(BaseModel):
 
 class CollectionResponse(BaseModel):
     items: list[FoodItemResponse]
+
+
+class CalculateResponse(BaseModel):
+    energy_kcal: float
+    carbohydrate_g: float
+    protein_g: float
+    lipid_g: float
+    fiber_g: float
+    insulin_needed: float | None
 
 
 @app.get("/api/health", name="Health Check", tags=["Endpoints"])
@@ -156,7 +161,9 @@ def search(item: SearchItem):
     return CollectionResponse(items=result)
 
 
-@app.post("/api/relation", name="Consulta por Relações Nutricionais", tags=["Endpoints"])
+@app.post(
+    "/api/relation", name="Consulta por Relações Nutricionais", tags=["Endpoints"]
+)
 def relation(item: RelationItem):
     """
     Lista os alimentos com base na relação nutricional entre dois parâmetros `("energy_kcal", "protein_g", "lipid_g", "carbohydrate_g", "fiber_g")`.
@@ -179,12 +186,15 @@ def relation(item: RelationItem):
     return RelationResponse(items=results)
 
 
-@app.post("/api/calculate_macros", name="Cálculo de Macronutrientes", tags=["Endpoints"])
-def calculate_macros(meal_input: MealInput):
+@app.post(
+    "/api/calculate", name="Cálculo de Macronutrientes e Insulina", tags=["Endpoints"]
+)
+def calculate(meal_input: MealInput):
     """
-    Calcula os macronutrientes totais de uma refeição com base nos alimentos e suas quantidades em gramas.
+    Calcula os macronutrientes totais de uma refeição com base nos alimentos e suas quantidades em gramas e a quantidade de insulina necessária (opcional) com base no fator de insulina/carboidrato.
     """
     meal = Meal()
+
     with Database(url=os.getenv("DB_URL")) as db:
         for item in meal_input.meal:
             record = db.select(
@@ -199,39 +209,20 @@ def calculate_macros(meal_input: MealInput):
                     status_code=404,
                     detail=f"Food item with ID {item.food_id} not found.",
                 )
-    return meal
 
+    insulin_needed = None
+    if meal_input.factor_insulin_cho:
+        insulin_counter = InsulinCounter(meal, meal_input.factor_insulin_cho)
+        insulin_needed = insulin_counter.count(meal_input.mode)
 
-@app.post("/api/calculate_insulin", name="Cálculo de Insulina", tags=["Endpoints"])
-def calculate_insulin(input_item: CalculateInsulinInput):
-    """
-    Calcula a quantidade de insulina necessária para uma refeição com base nos alimentos, suas quantidades em gramas e no fator insulina por carboidrato.
-    """
-    meal = Meal()
-    with Database(url=os.getenv("DB_URL")) as db:
-        for item in input_item.meal:
-            record = db.select(
-                table_name="integrate_tables",
-                id=item.food_id,
-            )
-            if record:
-                food_item = FoodItem.from_dict(FoodItem, data=record[0])
-                meal.add_item(item=food_item, grams=item.grams)
-            else:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Food item with ID {item.food_id} not found.",
-                )
-
-    insulin_counter = InsulinCounter(meal, input_item.factor_insulin_cho)
-    insulin_counter.count(input_item.mode)
-
-    return {
-        "items": meal.items,
-        "portions": meal.portions,
-        "insulin_needed": insulin_counter.count(input_item.mode),
-        "mode": input_item.mode,
-    }
+    return CalculateResponse(
+        energy_kcal = meal.energy_kcal,
+        carbohydrate_g = meal.carbohydrate_g,
+        protein_g = meal.protein_g,
+        lipid_g = meal.lipid_g,
+        fiber_g = meal.fiber_g,
+        insulin_needed = insulin_needed
+    )
 
 
 if __name__ == "__main__":
