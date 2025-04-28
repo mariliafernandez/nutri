@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Literal
 
@@ -12,7 +13,31 @@ import os
 
 
 load_dotenv()
-app = FastAPI()
+
+description = """
+A **NutrinionALL API** facilita o acesso a informações nutricionais de alimentos e permite a integração de dados nutricionais em sua aplicação de forma simples e eficiente. Oferecemos uma solução completa para:
+
+- Informações nutricionais de bases brasileiras consolidadas e integradas em um único lugar:
+    - TACO (Tabela Brasileira de Composição de Alimentos)
+    - IBGE (Instituto Brasileiro de Geografia e Estatística)
+- Consulta de informações nutricionais de alimentos de forma rápida e customizada
+- Cálculo personalizado de:
+  - Macronutrientes
+  - Calorias
+  - Necessidades de insulina
+
+Desenvolvida para aplicações de **saúde**, **nutrição** e **controle glicêmico**, a API permite integrações fáceis e rápidas por meio de **endpoints RESTful**.
+
+"""
+
+app = FastAPI(
+    title="NutritionALL API",
+    version="1.0.0",
+    description=description,
+    openapi_tags=None,
+    openapi_url="/api/openapi.json",
+    docs_url="/api/docs",
+)
 
 
 class SearchItem(BaseModel):
@@ -24,8 +49,8 @@ class SearchItem(BaseModel):
 
 
 class RelationItem(BaseModel):
-    col1: str
-    col2: str
+    col1: Literal["energy_kcal", "protein_g", "lipid_g", "carbohydrate_g", "fiber_g"]
+    col2: Literal["energy_kcal", "protein_g", "lipid_g", "carbohydrate_g", "fiber_g"]
     ascending: bool = False
     max_results: int | None = None
     categories: list[str] = []
@@ -82,73 +107,70 @@ class CollectionResponse(BaseModel):
     items: list[FoodItemResponse]
 
 
-@app.get("/")
-def hello_world():
-    return {"Hello": "World"}
+@app.get("/api/health", name="Health Check", tags=["Endpoints"])
+def health_check():
+    """Verifica a saúde do serviço e a conexão com o banco de dados."""
+    try:
+        # Fazendo uma consulta simples no banco para verificar a conexão
+        with Database(url=os.getenv("DB_URL")) as connection:
+            result = connection.run_query("SELECT 1")
+    except Exception as e:
+        return JSONResponse(
+            status_code=503, content={"status": "nok", "db_error": str(e)}
+        )
+
+    if len(result) == 1:
+        return JSONResponse(status_code=200, content={"status": "ok"})
+
+    return JSONResponse(status_code=200, content={"status": "nok"})
 
 
-@app.get("/categories")
+@app.get("/api/categories", name="Categorias Disponíveis", tags=["Endpoints"])
 def get_categories():
-    db = Database(os.getenv("DB_NAME"))
-    db.connect(
-        host=os.getenv("DB_HOST"),
-        port=int(os.getenv("DB_PORT")),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-    )
-
-    categories = db.select(
-        table_name="integrate_tables",
-        columns="category",
-        distinct=True,
-    )
+    """Retorna as categorias disponíveis no banco de dados."""
+    with Database(url=os.getenv("DB_URL")) as db:
+        categories = db.select(
+            table_name="integrate_tables",
+            columns="category",
+            distinct=True,
+        )
 
     return {"categories": [cat["category"] for cat in categories]}
 
 
-@app.post("/search")
+@app.post("/api/search", name="Consulta de Alimentos", tags=["Endpoints"])
 def search(item: SearchItem):
-
-    db = Database(os.getenv("DB_NAME"))
-    db.connect(
-        host=os.getenv("DB_HOST"),
-        port=int(os.getenv("DB_PORT")),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-    )
-
-    result = db.select(
-        table_name="integrate_tables",
-        description_like=item.name,
-        categories=item.categories,
-        order_by=item.order_by,
-        order="ASC" if item.ascending else "DESC",
-        limit=item.max_results,
-    )
+    """
+    Consulta de alimentos com base nos parâmetros fornecidos.
+    """
+    with Database(url=os.getenv("DB_URL")) as db:
+        result = db.select(
+            table_name="integrate_tables",
+            description_like=item.name,
+            categories=item.categories,
+            order_by=item.order_by,
+            order="ASC" if item.ascending else "DESC",
+            limit=item.max_results,
+        )
 
     return CollectionResponse(items=result)
 
 
-@app.post("/relation")
+@app.post("/api/relation", name="Consulta por Relações Nutricionais", tags=["Endpoints"])
 def relation(item: RelationItem):
-
-    db = Database(os.getenv("DB_NAME"))
-    db.connect(
-        host=os.getenv("DB_HOST"),
-        port=int(os.getenv("DB_PORT")),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-    )
-
-    results = db.select_relation(
-        table_name="integrate_tables",
-        select_columns="id, description, category, energy_kcal, protein_g, lipid_g, carbohydrate_g, fiber_g, source",
-        col1=item.col1,
-        col2=item.col2,
-        categories=item.categories,
-        order="ASC" if item.ascending else "DESC",
-        limit=item.max_results,
-    )
+    """
+    Lista os alimentos com base na relação nutricional entre dois parâmetros `("energy_kcal", "protein_g", "lipid_g", "carbohydrate_g", "fiber_g")`.
+    """
+    with Database(url=os.getenv("DB_URL")) as db:
+        results = db.select_relation(
+            table_name="integrate_tables",
+            select_columns="id, description, category, energy_kcal, protein_g, lipid_g, carbohydrate_g, fiber_g, source",
+            col1=item.col1,
+            col2=item.col2,
+            categories=item.categories,
+            order="ASC" if item.ascending else "DESC",
+            limit=item.max_results,
+        )
 
     results = [
         r | {"relation_description": f"{item.col1} / {item.col2}"} for r in results
@@ -157,60 +179,49 @@ def relation(item: RelationItem):
     return RelationResponse(items=results)
 
 
-@app.post("/calculate_macros")
+@app.post("/api/calculate_macros", name="Cálculo de Macronutrientes", tags=["Endpoints"])
 def calculate_macros(meal_input: MealInput):
-
-    db = Database(os.getenv("DB_NAME"))
-    db.connect(
-        host=os.getenv("DB_HOST"),
-        port=int(os.getenv("DB_PORT")),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-    )
-
+    """
+    Calcula os macronutrientes totais de uma refeição com base nos alimentos e suas quantidades em gramas.
+    """
     meal = Meal()
-
-    for item in meal_input.meal:
-        record = db.select(
-            table_name="integrate_tables",
-            id=item.food_id,
-        )
-        if record:
-            food_item = FoodItem.from_dict(FoodItem, data=record[0])
-            meal.add_item(item=food_item, grams=item.grams)
-        else:
-            raise HTTPException(
-                status_code=404, detail=f"Food item with ID {item.food_id} not found."
+    with Database(url=os.getenv("DB_URL")) as db:
+        for item in meal_input.meal:
+            record = db.select(
+                table_name="integrate_tables",
+                id=item.food_id,
             )
-
+            if record:
+                food_item = FoodItem.from_dict(FoodItem, data=record[0])
+                meal.add_item(item=food_item, grams=item.grams)
+            else:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Food item with ID {item.food_id} not found.",
+                )
     return meal
 
 
-@app.post("/calculate_insulin")
+@app.post("/api/calculate_insulin", name="Cálculo de Insulina", tags=["Endpoints"])
 def calculate_insulin(input_item: CalculateInsulinInput):
-
-    db = Database(os.getenv("DB_NAME"))
-    db.connect(
-        host=os.getenv("DB_HOST"),
-        port=int(os.getenv("DB_PORT")),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-    )
-
+    """
+    Calcula a quantidade de insulina necessária para uma refeição com base nos alimentos, suas quantidades em gramas e no fator insulina por carboidrato.
+    """
     meal = Meal()
-
-    for item in input_item.meal:
-        record = db.select(
-            table_name="integrate_tables",
-            id=item.food_id,
-        )
-        if record:
-            food_item = FoodItem.from_dict(FoodItem, data=record[0])
-            meal.add_item(item=food_item, grams=item.grams)
-        else:
-            raise HTTPException(
-                status_code=404, detail=f"Food item with ID {item.food_id} not found."
+    with Database(url=os.getenv("DB_URL")) as db:
+        for item in input_item.meal:
+            record = db.select(
+                table_name="integrate_tables",
+                id=item.food_id,
             )
+            if record:
+                food_item = FoodItem.from_dict(FoodItem, data=record[0])
+                meal.add_item(item=food_item, grams=item.grams)
+            else:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Food item with ID {item.food_id} not found.",
+                )
 
     insulin_counter = InsulinCounter(meal, input_item.factor_insulin_cho)
     insulin_counter.count(input_item.mode)
