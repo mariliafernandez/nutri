@@ -4,9 +4,29 @@ from src.QueryFactory import QueryFactory
 
 
 class Database:
-    def __init__(self, db_name):
-        self.db_name = db_name
-        self.connection = None
+    def __init__(self, host: str=None, port: int=None, user: str=None, password: str=None, db_name: str=None, url: str = None):
+        if url:
+            url = url.replace("mysql://", "").replace("mysql+pymysql://", "")
+            url, self.db_name = url.split("/")
+            self.user, url, self.port = url.split(":")
+            self.password, self.host = url.split("@")
+        else:
+            self.host = host
+            self.port = port
+            self.user = user
+            self.password = password
+            self.db_name = db_name
+            self.connection = None
+
+    def __enter__(self):
+        self.connection = mysql.connector.connect(
+            database=self.db_name,
+            host=self.host,
+            port=self.port,
+            user=self.user,
+            password=self.password,
+        )
+        return self
 
     def connect(
         self,
@@ -14,16 +34,18 @@ class Database:
         port: int,
         user: str,
         password: str,
+        db_name: str,
     ):
         # Simulate a database connection
         self.connection = mysql.connector.connect(
-            database=self.db_name, host=host, port=port, user=user, password=password
+            database=db_name, host=host, port=port, user=user, password=password
         )
         print(f"Connected to database {self.db_name} at {host}:{port}")
 
-    def disconnect(self):
+    def __exit__(self, exc_type, exc_value, traceback):
         # Simulate closing the database connection
-        self.connection.close()
+        if self.connection:
+            self.connection.close()
 
     def find_subtring(self, substring: str):
         if self.connection:
@@ -103,7 +125,7 @@ class Database:
 
         select_columns += f", {col1} / NULLIF({col2}, 0) AS relation_value"
         where_conditions = [f"{col1} IS NOT NULL", f"{col2} IS NOT NULL"]
-        
+
         if categories != []:
             where_conditions.append({"category": categories})
 
