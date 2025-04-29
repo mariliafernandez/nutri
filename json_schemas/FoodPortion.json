@@ -1,0 +1,12 @@
+{
+    "examples": [
+        {
+            "food_id": 9005,
+            "grams": 100
+        },
+        {
+            "food_id": 6801,
+            "grams": 50
+        }
+    ]
+}

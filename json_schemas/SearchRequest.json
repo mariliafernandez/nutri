@@ -1,0 +1,10 @@
+{
+    "examples": [
+        {
+            "name": "batata",
+            "order_by": "energy_kcal",
+            "max_results": 3,
+            "ascending": false
+        }
+    ]
+}

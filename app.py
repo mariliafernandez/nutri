@@ -1,17 +1,23 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import Literal
 
 from src.Meal import Meal
 from src.Database import Database
 from src.FoodItem import FoodItem
 from src.InsulinCounter import InsulinCounter
+from src.ApiModels import (
+    HealthCheckResponse,
+    CategoriesResponse,
+    SearchRequest,
+    SearchResponse,
+    RelationRequest,
+    RelationResponse,
+    CalculateRequest,
+    CalculateResponse,
+)
 from dotenv import load_dotenv
-
 import os
-
 
 load_dotenv()
 
@@ -43,79 +49,7 @@ app = FastAPI(
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"])
 
 
-class SearchItem(BaseModel):
-    name: str | None = None
-    order_by: str | None = None
-    ascending: bool | None = None
-    max_results: int | None = None
-    categories: list[str] = []
-
-
-class RelationItem(BaseModel):
-    col1: Literal["energy_kcal", "protein_g", "lipid_g", "carbohydrate_g", "fiber_g"]
-    col2: Literal["energy_kcal", "protein_g", "lipid_g", "carbohydrate_g", "fiber_g"]
-    ascending: bool = False
-    max_results: int | None = None
-    categories: list[str] = []
-
-
-class FoodPortion(BaseModel):
-    food_id: int
-    grams: int
-
-
-class MealInput(BaseModel):
-    meal: list[FoodPortion]
-    factor_insulin_cho: int = None
-    mode: Literal["carbo", "fpi", "fpu"] = "carbo"
-
-
-class FoodItemResponse(BaseModel):
-    id: int
-    description: str
-    category: str
-    energy_kcal: float | None
-    protein_g: float | None
-    lipid_g: float | None
-    carbohydrate_g: float | None
-    fiber_g: float | None
-    source: Literal["taco", "ibge"]
-    grams: int = 100
-
-
-class RelationItemResponse(BaseModel):
-    id: int
-    description: str
-    category: str
-    energy_kcal: float | None
-    protein_g: float | None
-    lipid_g: float | None
-    carbohydrate_g: float | None
-    fiber_g: float | None
-    relation_value: float | None
-    relation_description: str
-    source: Literal["taco", "ibge"]
-    grams: int = 100
-
-
-class RelationResponse(BaseModel):
-    items: list[RelationItemResponse]
-
-
-class CollectionResponse(BaseModel):
-    items: list[FoodItemResponse]
-
-
-class CalculateResponse(BaseModel):
-    energy_kcal: float
-    carbohydrate_g: float
-    protein_g: float
-    lipid_g: float
-    fiber_g: float
-    insulin_needed: float | None
-
-
-@app.get("/api/health", name="Health Check", tags=["Endpoints"])
+@app.get("/api/health", name="Health Check", tags=["Endpoints"], response_model=HealthCheckResponse)
 def health_check():
     """Verifica a saúde do serviço e a conexão com o banco de dados."""
     try:
@@ -133,7 +67,12 @@ def health_check():
     return JSONResponse(status_code=200, content={"status": "nok"})
 
 
-@app.get("/api/categories", name="Categorias Disponíveis", tags=["Endpoints"])
+@app.get(
+    "/api/categories",
+    name="Categorias Disponíveis",
+    tags=["Endpoints"],
+    response_model=CategoriesResponse,
+)
 def get_categories():
     """Retorna as categorias disponíveis no banco de dados."""
     with Database(url=os.getenv("DB_URL")) as db:
@@ -146,8 +85,13 @@ def get_categories():
     return {"categories": [cat["category"] for cat in categories]}
 
 
-@app.post("/api/search", name="Consulta de Alimentos", tags=["Endpoints"])
-def search(item: SearchItem):
+@app.post(
+    "/api/search",
+    name="Consulta de Alimentos",
+    tags=["Endpoints"],
+    response_model=SearchResponse,
+)
+def search(item: SearchRequest):
     """
     Consulta de alimentos com base nos parâmetros fornecidos.
     """
@@ -161,13 +105,16 @@ def search(item: SearchItem):
             limit=item.max_results,
         )
 
-    return CollectionResponse(items=result)
+    return SearchResponse(items=result)
 
 
 @app.post(
-    "/api/relation", name="Consulta por Relações Nutricionais", tags=["Endpoints"]
+    "/api/relation",
+    name="Consulta por Relações Nutricionais",
+    tags=["Endpoints"],
+    response_model=RelationResponse,
 )
-def relation(item: RelationItem):
+def relation(item: RelationRequest):
     """
     Lista os alimentos com base na relação nutricional entre dois parâmetros `("energy_kcal", "protein_g", "lipid_g", "carbohydrate_g", "fiber_g")`.
     """
@@ -190,9 +137,12 @@ def relation(item: RelationItem):
 
 
 @app.post(
-    "/api/calculate", name="Cálculo de Macronutrientes e Insulina", tags=["Endpoints"]
+    "/api/calculate",
+    name="Cálculo de Macronutrientes e Insulina",
+    tags=["Endpoints"],
+    response_model=CalculateResponse,
 )
-def calculate(meal_input: MealInput):
+def calculate(meal_input: CalculateRequest):
     """
     Calcula os macronutrientes totais de uma refeição com base nos alimentos e suas quantidades em gramas e a quantidade de insulina necessária (opcional) com base no fator de insulina/carboidrato.
     """

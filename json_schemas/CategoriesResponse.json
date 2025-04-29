@@ -1,0 +1,24 @@
+{
+    "examples": [
+        {
+            "categories": [
+                "Cereais, leguminosas e derivados",
+                "Hortaliças e derivados",
+                "Frutas e derivados",
+                "Óleos e gorduras",
+                "Pescados e frutos do mar",
+                "Carnes, ovos e derivados",
+                "Leite e derivados",
+                "Bebidas",
+                "Açúcares e produtos de confeitaria",
+                "Miscelâneas",
+                "Alimentos industrializados e conservas",
+                "Alimentos preparados",
+                "Nozes, castanhas e sementes",
+                "Farinhas, féculas e massas",
+                "Sais e condimentos",
+                "Panificados"
+            ]
+        }
+    ]
+}

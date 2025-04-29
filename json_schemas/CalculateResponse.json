@@ -1,0 +1,12 @@
+{
+    "examples": [
+        {
+            "energy_kcal": 285.1735,
+            "carbohydrate_g": 29.78335,
+            "protein_g": 6.234334,
+            "lipid_g": 15.752559999999999,
+            "fiber_g": 2.99,
+            "insulin_needed": 2.978335
+        }
+    ]
+}

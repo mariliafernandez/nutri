@@ -1,0 +1,18 @@
+{
+    "examples": [
+        {
+            "meal": [
+                {"food_id": 9005, "grams": 100},
+                {"food_id": 6801, "grams": 50}
+            ],
+            "factor_insulin_cho": 10,
+            "mode": "fpu"
+        },
+        {
+            "meal": [
+                {"food_id": 9005, "grams": 100},
+                {"food_id": 6801, "grams": 50}
+            ]
+        }
+    ]
+}

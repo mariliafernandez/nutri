@@ -1,0 +1,13 @@
+{
+    "examples": [
+        {
+            "col1": "fiber_g",
+            "col2": "carbohydrate_g",
+            "max_results": 3,
+            "ascending": false,
+            "categories": [
+                "Farinhas, féculas e massas"
+            ]
+        }
+    ]
+}

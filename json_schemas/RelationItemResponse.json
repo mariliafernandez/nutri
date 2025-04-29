@@ -1,0 +1,46 @@
+{
+    "examples": [
+        {
+            "id": 7460,
+            "description": "Fibra de soja",
+            "category": "Farinhas, féculas e massas",
+            "energy_kcal": 70,
+            "protein_g": 12,
+            "lipid_g": 2,
+            "carbohydrate_g": 74,
+            "fiber_g": 73,
+            "relation_value": 0.9864864864864865,
+            "relation_description": "fiber_g / carbohydrate_g",
+            "source": "ibge",
+            "grams": 100
+        },
+        {
+            "id": 7441,
+            "description": "Fibra de cereal trigo",
+            "category": "Farinhas, féculas e massas",
+            "energy_kcal": 216,
+            "protein_g": 15.55,
+            "lipid_g": 4.25,
+            "carbohydrate_g": 64.51,
+            "fiber_g": 42.8,
+            "relation_value": 0.6634629951906786,
+            "relation_description": "fiber_g / carbohydrate_g",
+            "source": "ibge",
+            "grams": 100
+        },
+        {
+            "id": 7440,
+            "description": "Fibra de trigo",
+            "category": "Farinhas, féculas e massas",
+            "energy_kcal": 216,
+            "protein_g": 15.55,
+            "lipid_g": 4.25,
+            "carbohydrate_g": 64.51,
+            "fiber_g": 42.8,
+            "relation_value": 0.6634629951906786,
+            "relation_description": "fiber_g / carbohydrate_g",
+            "source": "ibge",
+            "grams": 100
+        }
+    ]
+}

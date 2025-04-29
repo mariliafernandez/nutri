@@ -1,0 +1,12 @@
+{
+    "examples": [
+        {
+            "status": "ok",
+            "db_error": null
+        },
+        {
+            "status": "nok",
+            "db_error": "Database connection error"
+        }
+    ]
+}
