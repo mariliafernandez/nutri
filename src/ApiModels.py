@@ -27,10 +27,12 @@ class CategoriesResponse(BaseModel):
 
 
 class SearchRequest(BaseModel):
-    name: str | None = None
+    name: str = Field(default=None, description="Nome do alimento a ser pesquisado")
     order_by: Literal[
         "energy_kcal", "protein_g", "lipid_g", "carbohydrate_g", "fiber_g"
-    ] = None
+    ] = Field(
+        default=None, description="Ordenação customizada, apenas se `name=null`")
+    
     ascending: bool = Field(
         default=False,
         description="Ordenar os resultados em ordem crescente",
@@ -136,7 +138,9 @@ class CalculateResponse(BaseModel):
     lipid_g: float
     fiber_g: float
     percentages: EnergyPercentages
-    insulin_needed: float | None = Field(default=None, description="Insulina necessária em UI")
+    insulin_needed: float | None = Field(
+        default=None, description="Insulina necessária em UI"
+    )
     model_config = SettingsConfigDict(
         json_schema_extra=load_json_schema("CalculateResponse.json"),
     )

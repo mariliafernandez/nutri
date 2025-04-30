@@ -99,7 +99,9 @@ def get_categories():
 )
 def search(item: SearchRequest):
     """
-    Consulta de alimentos com base nos parâmetros fornecidos.
+    Busca de alimentos com base nos parâmetros fornecidos. 
+    
+    Caso seja fornecido o parâmetro `name`, o resultado será ordenado de acordo com a similaridade com o nome do alimento. Caso contrário, será ordenado de acordo com o parâmetro `order_by`.
     """
     with Database(url=os.getenv("DB_URL")) as db:
         results = db.select(
@@ -109,17 +111,18 @@ def search(item: SearchRequest):
             order="ASC" if item.ascending else "DESC",
         )
 
-    choices = [{num: r["description"]} for num, r in enumerate(results)]
-    matches = process.extract(
-        item.name, choices, scorer=fuzz.token_sort_ratio, limit=item.max_results
-    )
+    if item.name:
+        choices = [{num: r["description"]} for num, r in enumerate(results)]
+        matches = process.extract(
+            item.name, choices, scorer=fuzz.token_sort_ratio, limit=item.max_results
+        )
 
-    response = []
-    for m in matches:
-        response.append(m[0].popitem()[0])  # formato do match: ({641: 'Batata-doce, Frito(a)'}, 63)
+        response = []
+        for m in matches:
+            response.append(results[m[0].popitem()[0]])  # formato do match: ({641: 'Batata-doce, Frito(a)'}, 63)
 
-    return SearchResponse(items=response)
-
+        return SearchResponse(items=response)
+    return SearchResponse(items=results[:item.max_results])
 
 @app.post(
     "/api/relation",
