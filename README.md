@@ -50,7 +50,7 @@ Retorna todas as categorias de alimentos presentes na base de dados
 **Resposta:**
 | Campo         | Tipo      | Obrigatório | Descrição |
 |---------------|-----------|-------------|-----------|
-| `categories`  | string[]  | Sim         | Nomes das categorias alimentares |
+| `categories`  | string[ ]  | Sim         | Nomes das categorias alimentares |
 
 
 ### 🔍 `POST /api/search` - Consulta de Alimentos
@@ -66,7 +66,7 @@ Consulta alimentos com base em nome, ordenação e filtros opcionais
 | `name`        | string      | Não         | Termo de busca no nome do alimento |
 | `order_by`    | string             | Não         | Campo para ordenação (`energy_kcal`, `protein_g`, `lipid_g`, `carbohydrate_g`, `fiber_g`) |
 | `ascending`   | boolean            | Não         | Ordenar de forma crescente (default: `false`) |
-| `max_results` | integer     | Não         | Número máximo de resultados (default: `null`) |
+| `max_results` | int     | Não         | Número máximo de resultados (default: `null`) |
 | `categories`  | string[ ]           | Não         | Lista de categorias a filtrar (default: `[] - todas as categorias`) |
 
 **Exemplo:**
@@ -83,14 +83,14 @@ Traz os 10 primeiros resultados de `batata` com a maior quantidade de energia (k
 **Resposta:**
 | Campo            | Tipo         | Obrigatório | Descrição |
 |------------------|--------------|-------------|-----------|
-| `id`             | integer      | Sim         | ID do alimento |
+| `id`             | int      | Sim         | ID do alimento |
 | `description`    | string       | Sim         | Nome do alimento |
 | `category`       | string       | Sim         | Categoria alimentar |
-| `energy_kcal`    | number       | Não         | Energia em kcal por 100g |
-| `protein_g`      | number       | Não         | Proteína em gramas por 100g |
-| `lipid_g`        | number       | Não         | Lipídios em gramas por 100g |
-| `carbohydrate_g` | number       | Não         | Carboidratos em gramas por 100g |
-| `fiber_g`        | number       | Não         | Fibras em gramas por 100g |
+| `energy_kcal`    | float       | Não         | Energia em kcal por 100g |
+| `protein_g`      | float       | Não         | Proteína em gramas por 100g |
+| `lipid_g`        | float       | Não         | Lipídios em gramas por 100g |
+| `carbohydrate_g` | float       | Não         | Carboidratos em gramas por 100g |
+| `fiber_g`        | float       | Não         | Fibras em gramas por 100g |
 | `source`         | string       | Sim         | Fonte dos dados: `"taco"` ou `"ibge"` |
 
 ### ⚖️ `POST /api/relation` -  Consulta por Relações Nutricionais
@@ -100,10 +100,10 @@ Retorna alimentos com base em relações entre dois nutrientes.
 **Requisição:**
 | Campo         | Tipo      | Obrigatório | Descrição |
 |---------------|-----------|-------------|-----------|
-| `col1`        | string    | Sim         | Nutriente numerador |
-| `col2`        | string    | Sim         | Nutriente denominador |
+| `col1`        | string    | Sim         | Numerador da relação, opções: `energy_kcal`, `protein_g`, `lipid_g`, `carbohydrate_g`, `fiber_g` |
+| `col2`        | string    | Sim         | Denominador de relação, opções: `energy_kcal`, `protein_g`, `lipid_g`, `carbohydrate_g`, `fiber_g` |
 | `ascending`   | boolean   | Não         | Ordenar de forma crescente (default: `false - descrescente`) |
-| `max_results` | integer   | Não         | Limite de resultados, (default: `null - todos os resultados`) |
+| `max_results` | int    | Não         | Limite de resultados, (default: `null - todos os resultados`) |
 | `categories`  | string[ ]  | Não         | Filtro por categorias, (default: `[] - todas as categorias`) |
 
 **Exemplo:**
@@ -121,16 +121,16 @@ Consulta os top 3 alimentos da categoria `Farinhas, féculas e massas` com a mai
 **Resposta:**
 | Campo               | Tipo          | Obrigatório | Descrição |
 |---------------------|---------------|-------------|-----------|
-| `id`             | integer      | Sim         | ID do alimento |
+| `id`             | int      | Sim         | ID do alimento |
 | `description`    | string       | Sim         | Nome do alimento |
 | `category`       | string       | Sim         | Categoria alimentar |
-| `energy_kcal`    | number       | Não         | Energia em kcal por 100g |
-| `protein_g`      | number       | Não         | Proteína em gramas por 100g |
-| `lipid_g`        | number       | Não         | Lipídios em gramas por 100g |
-| `carbohydrate_g` | number       | Não         | Carboidratos em gramas por 100g |
-| `fiber_g`        | number       | Não         | Fibras em gramas por 100g |
+| `energy_kcal`    | float       | Não         | Energia em kcal por 100g |
+| `protein_g`      | float       | Não         | Proteína em gramas por 100g |
+| `lipid_g`        | float       | Não         | Lipídios em gramas por 100g |
+| `carbohydrate_g` | float       | Não         | Carboidratos em gramas por 100g |
+| `fiber_g`        | float       | Não         | Fibras em gramas por 100g |
 | `source`         | string       | Sim         | Fonte dos dados: `"taco"` ou `"ibge"` |
-| `relation_value`        | number        | Sim         | Valor da razão entre `col1` e `col2` |
+| `relation_value`        | float        | Sim         | Valor da razão entre `col1` e `col2` |
 | `relation_description`  | string     | Sim         | Descrição da relação (ex: `"fiber_g / carbohydrate_g"`) |
 
 ### 🍽️ `POST /api/calculate` - Cálculo de Macronutrientes e Insulina
@@ -149,7 +149,7 @@ O cálculo considera a **quantidade total** de insulina necessária, pode ser ne
 | Campo                | Tipo         | Obrigatório | Descrição |
 |----------------------|--------------|-------------|-----------|
 | `meal`               | `FoodPortion[]` | Sim      | Lista de alimentos com quantidade em gramas |
-| `factor_insulin_cho` | integer      | Não         | Fator insulina/carboidrato (opcional) |
+| `factor_insulin_cho` | int      | Não         | Fator insulina/carboidrato (opcional) |
 | `mode`               | string       | Não         | Modo de cálculo: `"carbo"` (default), `"fpi"`, `"fpu"` |
 
 **FoodPortion:**
