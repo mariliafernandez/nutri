@@ -49,7 +49,12 @@ app = FastAPI(
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST"])
 
 
-@app.get("/api/health", name="Health Check", tags=["Endpoints"], response_model=HealthCheckResponse)
+@app.get(
+    "/api/health",
+    name="Health Check",
+    tags=["Endpoints"],
+    response_model=HealthCheckResponse,
+)
 def health_check():
     """Verifica a saúde do serviço e a conexão com o banco de dados."""
     try:
@@ -174,6 +179,11 @@ def calculate(meal_input: CalculateRequest):
         protein_g=meal.protein_g,
         lipid_g=meal.lipid_g,
         fiber_g=meal.fiber_g,
+        percentages={
+            "carbohydrate": meal.kcal_percentage("carbohydrate_g"),
+            "protein": meal.kcal_percentage("protein_g"),
+            "lipid": meal.kcal_percentage("lipid_g"),
+        },
         insulin_needed=insulin_needed,
     )
 

@@ -1,12 +1,17 @@
 {
     "examples": [
         {
-            "energy_kcal": 285.1735,
-            "carbohydrate_g": 29.78335,
-            "protein_g": 6.234334,
-            "lipid_g": 15.752559999999999,
+            "energy_kcal": 285.17,
+            "carbohydrate_g": 29.78,
+            "protein_g": 6.23,
+            "lipid_g": 15.75,
             "fiber_g": 2.99,
-            "insulin_needed": 2.978335
+            "percentages": {
+                "carbohydrate": 42,
+                "protein": 9,
+                "lipid": 50
+            },
+            "insulin_needed": 1.99
         }
     ]
 }

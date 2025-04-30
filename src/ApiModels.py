@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_serializer
 from typing import Literal
 from pydantic_settings import SettingsConfigDict
 import json
@@ -31,9 +31,18 @@ class SearchRequest(BaseModel):
     order_by: Literal[
         "energy_kcal", "protein_g", "lipid_g", "carbohydrate_g", "fiber_g"
     ] = None
-    ascending: bool = False
-    max_results: int | None = None
-    categories: list[str] = []
+    ascending: bool = Field(
+        default=False,
+        description="Ordenar os resultados em ordem crescente",
+    )
+    max_results: int = Field(
+        default=None,
+        description="Número máximo de resultados a serem retornados (por padrão retorna todos)",
+    )
+    categories: list[str] = Field(
+        default=[],
+        description="Filtro de categorias (por padrão busca em todas as categorias)",
+    )
     model_config = SettingsConfigDict(
         populate_by_name=True,
         json_schema_extra=load_json_schema("SearchRequest.json"),
@@ -50,7 +59,6 @@ class SearchItemResponse(BaseModel):
     carbohydrate_g: float | None
     fiber_g: float | None
     source: Literal["taco", "ibge"]
-    grams: int = 100
     model_config = SettingsConfigDict(
         json_schema_extra=load_json_schema("SearchItemResponse.json"),
     )
@@ -111,13 +119,35 @@ class CalculateRequest(BaseModel):
     )
 
 
+class EnergyPercentages(BaseModel):
+    carbohydrate: float
+    protein: float
+    lipid: float
+
+    @field_serializer("carbohydrate", "protein", "lipid")
+    def round_float(self, value: float) -> float:
+        return round(value)
+
+
 class CalculateResponse(BaseModel):
     energy_kcal: float
     carbohydrate_g: float
     protein_g: float
     lipid_g: float
     fiber_g: float
-    insulin_needed: float | None
+    percentages: EnergyPercentages
+    insulin_needed: float | None = Field(default=None, description="Insulina necessária em UI")
     model_config = SettingsConfigDict(
         json_schema_extra=load_json_schema("CalculateResponse.json"),
     )
+
+    @field_serializer(
+        "energy_kcal",
+        "carbohydrate_g",
+        "protein_g",
+        "lipid_g",
+        "fiber_g",
+        "insulin_needed",
+    )
+    def round_float(self, value: float) -> float:
+        return round(value, 2) if value is not None else None

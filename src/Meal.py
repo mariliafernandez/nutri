@@ -5,15 +5,7 @@ from typing import Literal
 
 class Meal:
     def __init__(
-        self,
-        type: Literal[
-            "café da manhã",
-            "lanche da manhã",
-            "almoço",
-            "lanche da tarde",
-            "jantar",
-            "ceia",
-        ] = None,
+        self
     ):
         self.items = []
         self.portions = []
@@ -22,14 +14,29 @@ class Meal:
         self.lipid_g = 0
         self.energy_kcal = 0
         self.fiber_g = 0
-        self.type = type
 
-    def __repr__(self):
-        string = f"Refeição: {self.type}\n-----"
-        for i in range(len(self.items)):
-            string += f"\n{str(self.items[i].description)}, {self.portions[i] * self.items[i].grams} g"
-        string += f"\n-----\ncarboidratos: {round(self.carbohydrate_g, 2)}\nproteínas: {round(self.protein_g, 2)}\ngorduras: {round(self.lipid_g, 2)}\ncalorias: {round(self.energy_kcal, 2)}\n-----"
-        return string
+    def kcal(self, attr: str) -> float:
+        kcal_per_g = {
+            "carbohydrate_g": 4,
+            "protein_g": 4,
+            "lipid_g": 9,
+        }
+        return (
+            self.__getattribute__(attr) * kcal_per_g[attr]
+            if self.__getattribute__(attr)
+            else 0
+        )
+
+    def kcal_percentage(self, attr: str) -> float:
+        return (
+            self.kcal(attr)
+            / (
+                self.kcal("carbohydrate_g")
+                + self.kcal("protein_g")
+                + self.kcal("lipid_g")
+            )
+            * 100
+        )
 
     def add(self, attr: str, item: FoodItem, portion: float):
         if item.__getattribute__(attr) is not None:
