@@ -84,7 +84,6 @@ class RelationItemResponse(BaseModel):
     relation_value: float | None
     relation_description: str
     source: Literal["taco", "ibge"]
-    grams: int = 100
     model_config = SettingsConfigDict(
         json_schema_extra=load_json_schema("RelationItemResponse.json"),
     )

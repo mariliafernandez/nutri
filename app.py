@@ -22,7 +22,7 @@ import os
 load_dotenv()
 
 description = """
-A **NutrinionALL API** facilita o acesso a informações nutricionais de alimentos e permite a integração de dados nutricionais em sua aplicação de forma simples e eficiente. Oferecemos uma solução completa para:
+A **NutrinionALL API** facilita o acesso a informações nutricionais de alimentos e permite a integração de dados nutricionais em sua aplicação de forma simples e eficiente. Ela oferece uma solução completa para:
 
 - Informações nutricionais de bases brasileiras consolidadas e integradas em um único lugar:
     - TACO (Tabela Brasileira de Composição de Alimentos)
