@@ -1,6 +1,7 @@
 Pipfile
 *.lock
 chroma_data/
+*.ipynb 
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
