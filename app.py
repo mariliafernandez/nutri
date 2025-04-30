@@ -18,6 +18,7 @@ from src.ApiModels import (
 )
 from dotenv import load_dotenv
 import os
+from fuzzywuzzy import process, fuzz
 
 load_dotenv()
 
@@ -101,16 +102,23 @@ def search(item: SearchRequest):
     Consulta de alimentos com base nos parâmetros fornecidos.
     """
     with Database(url=os.getenv("DB_URL")) as db:
-        result = db.select(
+        results = db.select(
             table_name="integrate_tables",
-            description_like=item.name,
             categories=item.categories,
             order_by=item.order_by,
             order="ASC" if item.ascending else "DESC",
-            limit=item.max_results,
         )
 
-    return SearchResponse(items=result)
+    choices = [{num: r["description"]} for num, r in enumerate(results)]
+    matches = process.extract(
+        item.name, choices, scorer=fuzz.token_sort_ratio, limit=item.max_results
+    )
+
+    response = []
+    for m in matches:
+        response.append(m[0].popitem()[0])  # formato do match: ({641: 'Batata-doce, Frito(a)'}, 63)
+
+    return SearchResponse(items=response)
 
 
 @app.post(
