@@ -100,28 +100,38 @@ def get_categories():
 def search(item: SearchRequest):
     """
     Busca de alimentos com base nos parâmetros fornecidos. 
-    
-    Caso seja fornecido o parâmetro `name`, o resultado será ordenado de acordo com a similaridade com o nome do alimento. Caso contrário, será ordenado de acordo com o parâmetro `order_by`.
+
+    Caso não seja fornecido `order_by`, a ordenação será por ID. Porém, se for fornecido `name`, o padrão da ordenação será pela similaridade com o nome do alimento. Caso `order_by` seja fornecido, a ordenação será feita por esse campo.
     """
     with Database(url=os.getenv("DB_URL")) as db:
         results = db.select(
+            description_like=item.name,
             table_name="integrate_tables",
             categories=item.categories,
             order_by=item.order_by,
             order="ASC" if item.ascending else "DESC",
         )
 
-    if item.name:
-        choices = [{num: r["description"]} for num, r in enumerate(results)]
-        matches = process.extract(
-            item.name, choices, scorer=fuzz.token_sort_ratio, limit=item.max_results
-        )
+        if len(results) == 0 and item.name:
+            results = db.select(
+                table_name="integrate_tables",
+                categories=item.categories,
+            )
+            choices = [{num: r["description"]} for num, r in enumerate(results)]
+            matches = process.extract(
+                item.name, choices, scorer=fuzz.token_sort_ratio, limit=item.max_results
+            )
 
-        response = []
-        for m in matches:
-            response.append(results[m[0].popitem()[0]])  # formato do match: ({641: 'Batata-doce, Frito(a)'}, 63)
-
-        return SearchResponse(items=response)
+            response = []
+            for match in matches:
+                # formato do match: ({641: 'Batata-doce, Frito(a)'}, 63)
+                m, score = match
+                idx, __ = m.popitem()
+                if score >= 60:  # Limite de similaridade
+                    response.append(results[idx])
+            if item.order_by:
+                response.sort(key=lambda x: x[item.order_by], reverse=not item.ascending)
+            return SearchResponse(items=response)
     return SearchResponse(items=results[:item.max_results])
 
 @app.post(

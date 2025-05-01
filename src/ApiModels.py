@@ -31,7 +31,7 @@ class SearchRequest(BaseModel):
     order_by: Literal[
         "energy_kcal", "protein_g", "lipid_g", "carbohydrate_g", "fiber_g"
     ] = Field(
-        default=None, description="Ordenação customizada, apenas se `name=null`")
+        default=None, description="Ordenação customizada (por padrão ordena por ID ou por similaridade)")
     
     ascending: bool = Field(
         default=False,
@@ -113,8 +113,14 @@ class FoodPortion(BaseModel):
 
 class CalculateRequest(BaseModel):
     meal: list[FoodPortion]
-    factor_insulin_cho: int = None
-    mode: Literal["carbo", "fpi", "fpu"] = "carbo"
+    factor_insulin_cho: int = Field(default=None, description="Fator de insulina:carboidrato em UI/g")
+    mode: Literal["carbo", "fpi", "fpu"] = Field(
+        default="carbo", description=
+        """**carbo:** cálculo padrão considerando apenas a ação dos carboidratos. \\
+        Os métodos **fpi** e **fpu** calculam a dose total de insulina em refeições com alto teor de gordura e proteína. A dose deve ser administrada de acordo com tratamento individual (50%/50%, 60%/40%, 70%/30%, etc.) \\
+        **fpi:** (Fat-Protein Increment): incrementa 30\% ao cálculo padrão de carboidratos \\
+        **fpu:** (Fat-Protein Units): considera o teor calórico proveniente das proteínas e gorduras, onde a cada 100kcal de proteínas e gorduras considera-se mais 10g de carboidratos."""
+        )
     model_config = SettingsConfigDict(
         populate_by_name=True,
         json_schema_extra=load_json_schema("CalculateRequest.json"),

@@ -91,7 +91,7 @@ class Database:
     ):
         conditions = []
         if description_like is not None:
-            conditions.append({"description": description_like})
+            conditions.append({"description": description_like.strip()})
         if id is not None:
             conditions.append({"id": id})
         if categories != []:
